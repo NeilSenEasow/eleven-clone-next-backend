@@ -28,10 +28,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Get CORS origins from environment variable
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8080").split(",")
+
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:8080"],  # React frontend
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -197,7 +200,7 @@ async def get_onboarding_profile(request: Request, user_id: str):
 # ---------------------------
 # AUTH ROUTES
 # ---------------------------
-@app.post("/api/signup")
+@app.post("/api/auth/signup")
 async def signup(user: UserSignup, request: Request):
     db = request.app.state.db
     existing = await db.users.find_one({"email": user.email})
@@ -216,7 +219,7 @@ async def signup(user: UserSignup, request: Request):
 
     return {"message": "User created successfully", "userId": str(result.inserted_id)}
 
-@app.post("/api/login", response_model=Token)
+@app.post("/api/auth/login", response_model=Token)
 async def login(user: UserLogin, request: Request):
     db = request.app.state.db
     user_doc = await db.users.find_one({"email": user.email})
